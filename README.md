@@ -40,132 +40,72 @@ Install dependencies with:
 
 This work uses two datasets:
 
-SIIM-ACR Pneumothorax Segmentation Challenge (2019)
+1. SIIM-ACR Pneumothorax Segmentation Challenge (2019)
 
-12,047 PNG images (1024×1024, 3 channels) with corresponding masks.
+- 12,047 PNG images (1024×1024, 3 channels) with corresponding masks.
+- Masks are binary PNG (values {0, 255}).
+- Split: 85% training, 15% validation.
 
-Masks are binary PNG (values {0, 255}).
+2. PTX-498 Dataset (Wang et al.)
 
-Split: 85% training, 15% validation.
+- 498 positive pneumothorax cases collected from 3 hospitals in Shanghai.
+- Used exclusively for final evaluation.
 
-PTX-498 Dataset (Wang et al.)
+## Data Preprocessing & Augmentation
 
-498 positive pneumothorax cases collected from 3 hospitals in Shanghai.
+- Resizing: All images and masks resized to 512×512.
+- Train augmentations (Albumentations):
+  - Horizontal flip (p=0.5)
+  - Random brightness/contrast or gamma adjustment
+  - Elastic, grid, or optical distortions
+  - Affine transforms (translation, scaling, rotation)
+- Validation augmentations: Only resizing.
 
-Used exclusively for final evaluation.
+## Training Setup
 
-Folder layout (image ↔ mask filenames must match):
+- GPU: NVIDIA RTX 3090 (24 GB VRAM).
+- Mixed Precision: Enabled (float16 for most ops, float32 for critical ops).
+- Batch size: 32
+- Epochs: 300
+- Early stopping: Patience of 20 epochs (monitored via validation IoU).
+- Checkpointing: Best model saved based on validation IoU.
 
-png_images/xxxx.png   # RGB-like images, uint8 [0..255]
-png_masks/xxxx.png    # Grayscale masks, values {0,255}
+## Post-processing
 
-Data Preprocessing & Augmentation
+- Binarization: Pixel-level thresholding (probabilities → binary mask).
+- Small component removal: Eliminates connected regions below a minimum area.
+- Automatic threshold search: Grid search on validation set for optimal binary threshold (BT) and removal threshold (RT).
 
-Resizing: All images and masks resized to 512×512.
+# Evaluation Metrics
 
-Train augmentations (Albumentations):
+- Internal validation: Monitored during training using IoU and F1-score.
+- Final evaluation (PTX-498):
+  - Accuracy
+  - Recall
+  - Precision
+  - F1-score (Dice coefficient)
+  - Intersection over Union (IoU)
+  - Confusion Matrix
 
-Horizontal flip (p=0.5)
+## Results
 
-Random brightness/contrast or gamma adjustment
+### Training (RTX 3090):
 
-Elastic, grid, or optical distortions
+- Step time: ~450 ms
+- Time per epoch: ~2m 24s
+- Total training time: ~12h 15m
 
-Affine transforms (translation, scaling, rotation)
+### Final metrics on PTX-498:
 
-Validation augmentations: Only resizing.
+- Accuracy: 98.42%
+- Recall: 74.18%
+- Precision: 92.69%
+- F1-score: 82.41%
+- IoU: 70.08%
 
-Training Setup
+### References
 
-GPU: NVIDIA RTX 3090 (24 GB VRAM).
-
-Mixed Precision: Enabled (float16 for most ops, float32 for critical ops).
-
-Batch size: 32
-
-Epochs: 300
-
-Early stopping: Patience of 20 epochs (monitored via validation IoU).
-
-Checkpointing: Best model saved based on validation IoU.
-
-Post-processing
-
-Binarization: Pixel-level thresholding (probabilities → binary mask).
-
-Small component removal: Eliminates connected regions below a minimum area.
-
-Automatic threshold search: Grid search on validation set for optimal binary threshold (BT) and removal threshold (RT).
-
-Evaluation Metrics
-
-Internal validation: Monitored during training using IoU and F1-score.
-
-Final evaluation (PTX-498):
-
-Accuracy
-
-Recall
-
-Precision
-
-F1-score (Dice coefficient)
-
-Intersection over Union (IoU)
-
-Confusion Matrix
-
-Results
-
-Training (RTX 3090):
-
-Step time: ~450 ms
-
-Time per epoch: ~2m 24s
-
-Total training time: ~12h 15m
-
-Final metrics on PTX-498:
-
-Accuracy: 98.42%
-
-Recall: 74.18%
-
-Precision: 92.69%
-
-F1-score: 82.41%
-
-IoU: 70.08%
-
-Example Outputs
-
-Loss & IoU curves during training.
-
-Confusion matrix on validation/test sets.
-
-Sample predictions vs ground-truth masks.
-
-Reproducibility
-
-Thresholds are automatically saved to thresholds.json:
-
-{
-  "binary_threshold": 0.05,
-  "removal_area": 0
-}
-
-References
-
-SIIM-ACR Pneumothorax Segmentation Challenge (2019).
-
-Wang et al., PTX-498 dataset.
-
-Segmentation Models (Keras/TensorFlow).
-
-Albumentations image augmentation library.
-
-
----
-
-¿Quieres que también genere un **diagrama visual en Mermaid (pipeline)** dentro del README para mostrar gráficamente el flujo (dataset → preprocessing → training → post-processing → evaluation)?
-
+1. SIIM-ACR Pneumothorax Segmentation Challenge (2019).
+2. Wang et al., PTX-498 dataset.
+3. Segmentation Models (Keras/TensorFlow).
+4. Albumentations image augmentation library.
