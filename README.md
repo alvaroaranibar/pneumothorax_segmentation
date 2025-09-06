@@ -34,8 +34,8 @@ The pipeline leverages **transfer learning**, **mixed precision**, and **efficie
 ## Requirements
 Install dependencies with:
 
-`bash
-pip install -U tensorflow segmentation-models albumentations opencv-python scikit-learn matplotlib
+<pre> ```
+pip install -U tensorflow segmentation-models albumentations opencv-python scikit-learn matplotlib``` </pre>
 
 ## Dataset
 
